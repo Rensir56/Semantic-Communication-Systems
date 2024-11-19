@@ -13,6 +13,7 @@ import os
 import pickle
 import scipy.io
 import numpy as np
+import copy
 
 from torch.autograd import Variable
 from torch import optim

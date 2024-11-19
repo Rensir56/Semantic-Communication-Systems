@@ -9,7 +9,8 @@
 import torch
 import os
 import imageio
-from models import get_classifier
+import argparse
+# from models import get_classifier
 from torchvision.datasets import mnist
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -333,7 +334,7 @@ for lambda_var in range(1):
         def criterion_pretraining(x_in, y_in, raw_in):
             # out_tmp1 = nn.CrossEntropyLoss()
             out_tmp2 = nn.MSELoss()
-            z_in = mlp_mnist(x_in)
+            # z_in = mlp_mnist(x_in)
             mse_in = lambda2 * out_tmp2(x_in, raw_in)
             loss_channel = mse_in
             return loss_channel
@@ -466,7 +467,7 @@ for lambda_var in range(1):
                     path = os.path.join('images/sample-epoch-%d-lambda-%.2f-compre-%.2f-2.png' % (
                         e, lambda1, compression_rate))
                     # scipy.misc.imsave(path, merged)
-                    imageio.imwrite(path, merged2)
+                    imageio.imwrite(path, merged)
                     print('saved %s' % path)
 
                     # path = os.path.join('images/im-epoch-%d-lambda-%d-compre-%d.png' % (
