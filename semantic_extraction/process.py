@@ -26,6 +26,8 @@ def parse_args():
                         default='./dataset/mnist', help="Path to the MNIST dataset")
     parser.add_argument('--output_image_path', type=str, default='image_recover_combing',
                         required=True, help="Path to save the recovered images")
+    parser.add_argument('--output_data_path', type=str, default='compress_data',
+                        required=True, help="Path to save the recovered images")
 
     return parser.parse_args()
 
@@ -161,7 +163,7 @@ def save_recovered_images(out, output_image_path):
         pil_img.save(f"{output_image_path}/mnist_test_{ii}.jpg")
 
 
-def main():
+def evaluate_mnist_models():
     args = parse_args()
 
     rate = args.rate
@@ -183,5 +185,37 @@ def main():
     save_recovered_images(out, args.output_image_path)
 
 
+def compress():
+    args = parse_args()
+
+    rate = args.rate
+
+    raw_dim = 28 * 28  # shape of the raw image
+    compression_rate = min((rate + 10) * 0.1, 1)
+    channel = int(compression_rate * raw_dim)
+    lambda1 = 1 - compression_rate
+    lambda2 = compression_rate
+
+    mlp_encoder, mlp_mnist = load_models(
+        args.model_encoder, args.model_classifier, channel)
+    testset = mnist.MNIST(args.dataset_path, train=False,
+                          transform=data_transform, download=True)
+    test_data = DataLoader(testset, batch_size=128, shuffle=False)
+
+    out = test_model(mlp_encoder, mlp_mnist, test_data, lambda1, lambda2)
+
+    compressed_np = out.detach().cpu().numpy()
+    np.save(args.output_data_path + '/compressed_data.npy', compressed_np)
+
+
+def reconstruct():
+    args = parse_args()
+
+    compressed_np = np.load(args.output_data_path)
+    compressed_tensor = torch.from_numpy(compressed_np).float()
+
+    save_recovered_images(compressed_tensor, args.output_image_path)
+
+
 if __name__ == '__main__':
-    main()
+    evaluate_mnist_models()
