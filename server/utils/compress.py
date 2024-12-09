@@ -2,7 +2,7 @@ from models import *
 from dataset import *
 from prepare import *
 from torchvision.datasets import mnist
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 import os
 
 
@@ -19,9 +19,16 @@ def compress(rate=1.0,
 
     mlp_encoder, _ = load_models(
         model_encoder, model_classifier, channel)
+    # testset = mnist.MNIST(dataset_path, train=False,
+    #                       transform=data_transform, download=True)
+    # test_data = DataLoader(testset, batch_size=128, shuffle=False)
     testset = mnist.MNIST(dataset_path, train=False,
                           transform=data_transform, download=True)
-    test_data = DataLoader(testset, batch_size=128, shuffle=False)
+
+    subset_indices = [2, 0, 1, 3, 4, 15, 84, 9, 11, 51, 5]  # list(range(8))
+    subset_testset = Subset(testset, subset_indices)
+
+    test_data = DataLoader(subset_testset, batch_size=128, shuffle=False)
 
     mlp_encoder.eval()
 
