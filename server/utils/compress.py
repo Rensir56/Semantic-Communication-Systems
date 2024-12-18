@@ -5,6 +5,11 @@ from torchvision.datasets import mnist
 from torch.utils.data import DataLoader, Subset
 import os
 
+# 获取当前脚本的绝对路径
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# 切换到当前目录
+os.chdir(current_dir)
+
 
 def compress(rate=1.0,
              model_encoder="../../semantic_extraction/MLP_MNIST_encoder_combining_1.000000.pkl",
