@@ -2,7 +2,7 @@ from models import *
 from dataset import *
 from prepare import *
 from torchvision.datasets import mnist
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 
 def evaluate_mnist_models(rate=1.0,
@@ -21,7 +21,13 @@ def evaluate_mnist_models(rate=1.0,
         model_encoder, model_classifier, channel)
     testset = mnist.MNIST(dataset_path, train=False,
                           transform=data_transform, download=True)
-    test_data = DataLoader(testset, batch_size=128, shuffle=False)
+
+    subset_indices = [2, 0, 1, 3, 4, 15, 84, 9, 11, 51, 5]  # list(range(8))
+    subset_testset = Subset(testset, subset_indices)
+
+    test_data = DataLoader(subset_testset, batch_size=128, shuffle=False)
+    print(len(test_data.dataset))
+    # test_data = DataLoader(testset, batch_size=128, shuffle=False)
 
     out = test_model(mlp_encoder, mlp_mnist, test_data, lambda1, lambda2)
     # print(out.shape)

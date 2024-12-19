@@ -3,6 +3,7 @@ from dataset import *
 from torch.autograd import Variable
 from PIL import Image
 import argparse
+import matplotlib.pyplot as plt
 
 
 def parse_args():
@@ -67,6 +68,8 @@ def test_model(mlp_encoder, mlp_mnist, test_data, lambda1, lambda2):
             num_correct = (pred == label).sum().item()
             acc = num_correct / im.shape[0]
             eval_acc += acc
+
+        print(f'pred={pred}, true={label}')
 
     print('Test Loss: {:.6f}, Test Accuracy: {:.6f}, Average PSNR: {:.6f}'.format(
         eval_loss / len(test_data), eval_acc / len(test_data), np.mean(psnr_all)))
