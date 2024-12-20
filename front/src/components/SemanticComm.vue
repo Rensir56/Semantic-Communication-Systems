@@ -488,16 +488,8 @@ export default {
   height: 32px;
 }
 
-:deep(.el-switch__core) {
-  height: 32px !important;
-  width: 60px !important;
-}
-
-/* 添加等待文本样式 */
-.waiting-text {
-  text-align: center;
-  padding: 50px;
-  color: #909399;
-  font-size: 18px;
-}
-</style>
+  :deep(.el-switch__core) {
+    height: 32px !important;  /* 增大开关核心高度 */
+    width: 60px !important;  /* 增大开关宽度 */
+  }
+  </style>
