@@ -1,6 +1,6 @@
-from models import *
-from dataset import *
-from prepare import *
+from .models import *
+from .dataset import *
+from .prepare import *
 from torchvision.datasets import mnist
 from torch.utils.data import DataLoader, Subset
 import os
@@ -15,7 +15,8 @@ def compress(rate=1.0,
              model_encoder="../../semantic_extraction/MLP_MNIST_encoder_combining_1.000000.pkl",
              model_classifier="../../semantic_extraction/MLP_MNIST.pkl",
              dataset_path="../../semantic_extraction/dataset/mnist",
-             output_data_path="../../compress_data"):
+             output_data_path="../../compress_data",
+             adversarial_samples=None):
 
     os.makedirs(output_data_path, exist_ok=True)
     raw_dim = 28 * 28  # shape of the raw image
@@ -30,7 +31,8 @@ def compress(rate=1.0,
     testset = mnist.MNIST(dataset_path, train=False,
                           transform=data_transform, download=True)
 
-    subset_indices = [2, 0, 1, 3, 4, 15, 84, 9, 11, 51, 5]  # list(range(8))
+    subset_indices = [2, 0, 1, 3, 4, 84, 9, 11,
+                      51, 5, 0, 2, 3, 4, 5, 23]  # list(range(16))
     subset_testset = Subset(testset, subset_indices)
 
     test_data = DataLoader(subset_testset, batch_size=128, shuffle=False)
@@ -38,11 +40,15 @@ def compress(rate=1.0,
     mlp_encoder.eval()
 
     with torch.no_grad():
-        for im, label in test_data:
-            im = Variable(im)
+        for i, (im, label) in enumerate(test_data):
+            im = Variable(im).view(im.size(0), -1)
             label = Variable(label)
 
+            if adversarial_samples is not None:
+                im = adversarial_samples[i]
+
             out = mlp_encoder(im)
+            print("out shape: ", out.shape)
 
     compressed_np = out.detach().cpu().numpy()
     np.save(output_data_path + '/compressed_data.npy', compressed_np)

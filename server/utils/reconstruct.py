@@ -1,4 +1,4 @@
-from prepare import *
+from .prepare import *
 import os
 
 # 获取当前脚本的绝对路径
@@ -6,26 +6,26 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # 切换到当前目录
 os.chdir(current_dir)
 
-def reconstruct(normal_output_data_path="./compress_data", 
-                adversarial_output_data_path="./compress_data", 
-                normal_output_image_path="./reconstruct_image",
-                adversarial_output_image_path="./reconstruct_image_uap"):
-    os.makedirs(normal_output_image_path, exist_ok=True)
-    os.makedirs(adversarial_output_image_path, exist_ok=True)
 
-    # 加载正常和对抗压缩数据
-    normal_compressed_np = np.load(f"{normal_output_data_path}/normal_compressed_data.npy")
-    adversarial_compressed_np = np.load(f"{adversarial_output_data_path}/adversarial_compressed_data.npy")
+def reconstruct(output_data_path="./result/compress_data", 
+                output_image_path="./result/reconstruct_image/origin", 
+                uap=False):
+    
+    os.makedirs(output_image_path, exist_ok=True)
 
-    # 将它们转换为PyTorch张量
-    normal_compressed_tensor = torch.from_numpy(normal_compressed_np).float()
-    adversarial_compressed_tensor = torch.from_numpy(adversarial_compressed_np).float()
+    compressed_np = np.load(f"{output_data_path}/compressed_data.npy")
+    compressed_tensor = torch.from_numpy(compressed_np).float()
 
-    save_recovered_images(normal_compressed_tensor, normal_output_image_path)
-    save_recovered_images(adversarial_compressed_tensor, adversarial_output_data_path)
+    if uap is True:
+        save_combined_images(compressed_tensor, output_image_path)
+    else:
+        save_compressed_images(compressed_tensor, output_image_path)
+
 
 if __name__ == '__main__':
-    reconstruct("../../semantic_extraction/compress_data",
-                "../../semantic_extraction/compress_data",
-                "../../reconstruct_image_uap",
-                "../../reconstruct_image")
+    uap=False
+    if uap is True:
+        output_image_path="./result/reconstruct_image/white"
+    else:
+        output_image_path="./result/reconstruct_image/origin"
+    reconstruct("../../compress_data", output_image_path, uap)

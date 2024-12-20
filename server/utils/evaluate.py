@@ -1,6 +1,6 @@
-from models import *
-from dataset import *
-from prepare import *
+from .models import *
+from .dataset import *
+from .prepare import *
 from torchvision.datasets import mnist
 from torch.utils.data import DataLoader, Subset
 
@@ -15,9 +15,20 @@ def evaluate_mnist_models(rate=1.0,
                           model_encoder="../../semantic_extraction/MLP_MNIST_encoder_combining_1.000000.pkl",
                           model_classifier="../../semantic_extraction/MLP_MNIST.pkl",
                           dataset_path="../../semantic_extraction/dataset/mnist",
-                          output_image_path="../../reconstruct_image"):
-
-    raw_dim = 28 * 28  # shape of the raw image
+                          output_image_path=None,
+                          output_data_path = "../../compress_data"):
+ 
+    compressed_np = np.load(output_data_path + '/compressed_data.npy')
+    compressed_tensor = torch.tensor(compressed_np)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    compressed_tensor = compressed_tensor.to(device)
+    print("Loaded tensor shape:", compressed_tensor.shape)
+    
+    eval_loss = 0
+    eval_acc = 0
+    psnr_all = []
+    rate = 1.0
+    raw_dim = 28 * 28
     compression_rate = min((rate + 10) * 0.1, 1)
     channel = int(compression_rate * raw_dim)
     lambda1 = 1 - compression_rate
@@ -25,22 +36,28 @@ def evaluate_mnist_models(rate=1.0,
 
     mlp_encoder, mlp_mnist = load_models(
         model_encoder, model_classifier, channel)
-    testset = mnist.MNIST(dataset_path, train=False,
-                          transform=data_transform, download=True)
+    mlp_encoder.eval()
+    mlp_mnist.eval()
 
-    subset_indices = [2, 0, 1, 3, 4, 15, 84, 9, 11, 51, 5]  # list(range(8))
-    subset_testset = Subset(testset, subset_indices)
+    with torch.no_grad():
+        out_mnist = mlp_mnist(compressed_tensor)
+        _, pred = out_mnist.max(1)
 
-    test_data = DataLoader(subset_testset, batch_size=128, shuffle=False)
-    print(len(test_data.dataset))
-    # test_data = DataLoader(testset, batch_size=128, shuffle=False)
+    true = torch.tensor([1, 7, 2, 0, 4, 8, 9, 6, 3,
+                        1, 7, 1, 0, 4, 1, 5]).to(device)
 
-    out = test_model(mlp_encoder, mlp_mnist, test_data, lambda1, lambda2)
-    # print(out.shape)
-
-    save_recovered_images(out, output_image_path)
-
+    correct = (pred == true).sum().item()
+    total = true.size(0)
+    accuracy = correct / total * 100
+    # print(f'Pred: {pred}')
+    # print(f'True: {true}')
+    # print(f'Accuracy: {accuracy:.2f}%')
+    return {
+       'predictions': pred.cpu().numpy().tolist(),
+       'true_labels': true.cpu().numpy().tolist(),
+       'accuracy': accuracy
+   }
 
 if __name__ == '__main__':
     evaluate_mnist_models(1.0, "../../semantic_extraction/MLP_MNIST_encoder_combining_1.000000.pkl",
-                          "../../semantic_extraction/MLP_MNIST.pkl", "../../semantic_extraction/dataset/mnist", "../../reconstruct_image")
+                          "../../semantic_extraction/MLP_MNIST.pkl", "../../semantic_extraction/dataset/mnist", "../../reconstruct_image", "../../compress_data")
