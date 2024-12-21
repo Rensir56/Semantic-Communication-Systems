@@ -116,7 +116,7 @@ def handle_reconstruct_and_evaluate():
                 return jsonify({
                     'status': 'success',
                     'reconstructed_images': black_box_images,
-                    'accuracy': f"{black_result['accuracy']:.2f}",
+                    'accuracy': f"{black_result['accuracy']*100:.2f}",
                     'predictions': black_result['predictions'],
                     'true_labels': black_result['true_labels']
                 })
